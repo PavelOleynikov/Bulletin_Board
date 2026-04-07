@@ -1,0 +1,37 @@
+# Виртуальные окружения
+.venv
+venv
+.env
+ENV
+
+# Python кэш
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Локальные файлы
+.env.local
+.env.*.local
+*.db
+postgresql
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Poetry
+*.poetry.lock
