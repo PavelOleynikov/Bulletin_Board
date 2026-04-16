@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",  # для аутентификации JWT
     "users",  # Пользователи
     "ads",  # Объявления
+    "feedback",  # Отзывы
 ]
 
 MIDDLEWARE = [
