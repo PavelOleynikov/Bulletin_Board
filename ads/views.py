@@ -2,6 +2,7 @@ from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Ad, Category
+from .pagination import AdPagination
 from .serializers import AdSerializer, CategorySerializer
 from .permissions import IsAuthorOrReadOnly
 
@@ -30,6 +31,7 @@ class AdViewSet(viewsets.ModelViewSet):
     queryset = Ad.objects.filter(is_active=True)  # Только активные объявления
     serializer_class = AdSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    pagination_class = AdPagination
 
     # Настройка фильтрации, поиска и сортировки
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
