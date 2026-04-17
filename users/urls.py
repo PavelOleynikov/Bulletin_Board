@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from users.apps import UsersConfig
-from users.views import UserCreateAPIView, UserViewSet
+from users.views import UserCreateAPIView, UserViewSet, PasswordResetView, PasswordResetConfirmView
 
 app_name = UsersConfig.name
 
@@ -18,4 +18,7 @@ urlpatterns = [
     path("register/", UserCreateAPIView.as_view(), name="register"),
     path("login/", TokenObtainPairView.as_view(permission_classes=(AllowAny,)), name="login"),
     path("token/refresh/", TokenRefreshView.as_view(permission_classes=(AllowAny,)), name="token_refresh"),
+    # Сброс пароля
+    path("reset_password/", PasswordResetView.as_view(), name="password_reset"),
+    path("reset_password_confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
 ] + router.urls
