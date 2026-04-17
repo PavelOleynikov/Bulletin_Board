@@ -25,10 +25,13 @@ class IsAuthorOrAdmin(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        # Чтение доступно всем
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        return obj.author == request.user or request.user.is_staff
+        # Админ может редактировать все объявления
+        # Пользователь может редактировать только свои
+        return request.user.is_staff or obj.author == request.user
 
 
 class IsActiveUser(permissions.BasePermission):

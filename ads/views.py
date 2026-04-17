@@ -1,10 +1,10 @@
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Ad, Category
-from .pagination import AdPagination
-from .serializers import AdSerializer, CategorySerializer
-from .permissions import IsAuthorOrReadOnly
+from ads.models import Ad, Category
+from ads.pagination import AdPagination
+from ads.serializers import AdSerializer, CategorySerializer
+from ads.permissions import IsAuthorOrAdmin, IsActiveUser
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -24,13 +24,13 @@ class AdViewSet(viewsets.ModelViewSet):
     - GET /ads/ - список всех активных объявлений
     - GET /ads/{id}/ - детальное просмотр объявления
     - POST /ads/ - создание объявления (только авторизованные)
-    - PUT/PATCH /ads/{id}/ - обновление (только автор)
-    - DELETE /ads/{id}/ - удаление (только автор)
+    - PUT/PATCH /ads/{id}/ - обновление (только автор или админ)
+    - DELETE /ads/{id}/ - удаление (только автор или админ)
     """
 
     queryset = Ad.objects.filter(is_active=True)  # Только активные объявления
     serializer_class = AdSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdmin, IsActiveUser]
     pagination_class = AdPagination
 
     # Настройка фильтрации, поиска и сортировки
