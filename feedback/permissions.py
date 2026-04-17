@@ -1,21 +1,12 @@
 from rest_framework import permissions
 
 
-class IsAuthorOrReadOnly(permissions.BasePermission):
-    """Пользователь может редактировать только свои комментарии"""
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.author == request.user
-
-
 class IsAdminOrAuthor(permissions.BasePermission):
     """Админ может всё, пользователь только свои комментарии"""
 
     def has_object_permission(self, request, view, obj):
         # Админ может всё
-        if request.user and request.user.is_staff:
+        if request.user.is_authenticated and request.user.role == "admin":
             return True
 
         # Чтение разрешено всем

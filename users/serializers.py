@@ -8,7 +8,7 @@ class UserCreateSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "password"]
+        fields = ["id", "email", "password", "first_name", "last_name", "role", "city", "phone", "image"]
         extra_kwargs = {"password": {"write_only": True}}  # Не показываем пароль, только для записи
 
 
@@ -25,4 +25,4 @@ class UserViewSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "city"]
+        fields = ["id", "email", "first_name", "last_name", "role", "city"]
