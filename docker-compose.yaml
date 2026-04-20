@@ -1,0 +1,78 @@
+# описание сервисов
+services:
+
+  web: # сервис веб-сервера
+
+    # собрать образ из Dockerfile в текущей папке
+    build: .
+    # команда запуска (многострочная)
+    command: >
+      sh -c "poetry run python manage.py migrate &&
+             poetry run python manage.py csu &&
+             poetry run python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+
+  db: # Сервис базы данных (PostgreSQL)
+
+    image: postgres:16.0-alpine
+    # берём переменные из файла .env
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    # том для сохранения данных БД
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # проверка, что БД готова
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      # проверять каждые 30 секунд
+      interval: 30s
+      # ждать ответа 10 секунд
+      timeout: 10s
+      # количество попыток
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  redis: # Сервис кэширования (Redis)
+
+    image: redis:7-alpine
+    # проброс порта
+    ports:
+      - "6379:6379"
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  default:
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+  redis_data:
