@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,11 +10,25 @@ from ads.permissions import IsAuthorOrAdmin, IsActiveUser
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet для категорий (только чтение)
+    ViewSet для категорий с кэшированием(только чтение)
     Доступно всем пользователям
     """
 
-    queryset = Category.objects.all()
+    def get_queryset(self):
+        # Кэшируем категории на 1 час (3600 секунд)
+        cache_key = "categories_list"
+        cached_data = cache.get(cache_key)
+
+        if cached_data is not None:
+            # Возвращаем закэшированные данные
+            return cached_data
+
+        # Если кэша нет, получаем из БД
+        queryset = Category.objects.all()
+        # Сохраняем в кэш на 1 час
+        cache.set(cache_key, queryset, 3600)
+        return queryset
+
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
