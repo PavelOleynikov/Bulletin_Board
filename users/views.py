@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -36,6 +36,16 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             return UserDetailViewSerializer
         return UserViewSerializer
+
+
+class CurrentUserView(APIView):
+    """Получение текущего авторизованного пользователя"""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserDetailViewSerializer(request.user)
+        return Response(serializer.data)
 
 
 class PasswordResetView(APIView):

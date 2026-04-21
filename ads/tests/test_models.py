@@ -22,7 +22,7 @@ class TestAdModel:
         assert ad.price == 15000000
         assert ad.author == user
         assert ad.category == category
-        assert ad.is_active == True
+        assert ad.is_active is True
 
     def test_ad_str(self, ad):
         assert "Продам квартиру" in str(ad)

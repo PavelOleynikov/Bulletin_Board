@@ -30,6 +30,10 @@ class AdSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["author", "created_at", "updated_at"]
 
+    def create(self, validated_data):
+        validated_data["is_active"] = True  # при создании объявление становится активным
+        return super().create(validated_data)
+
     def validate_title(self, value):
         """Валидация заголовка"""
 
