@@ -43,6 +43,16 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       DEBUG: "0"
@@ -52,6 +62,7 @@ jobs:
       DB_PASSWORD: postgres
       DB_HOST: localhost
       DB_PORT: 5432
+      REDIS_URL: redis://localhost:6379/1
 
     steps:
       - name: Check out code
@@ -76,12 +87,16 @@ jobs:
           pip install poetry
           poetry install
 
-      - name: Wait for PostgreSQL to be ready
+      - name: Wait for services
         run: |
           sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y postgresql-client redis-tools
           until pg_isready -h localhost -p 5432 -U postgres; do
             echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          until redis-cli -h localhost ping; do
+            echo "Waiting for Redis..."
             sleep 2
           done
 
