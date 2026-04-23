@@ -152,10 +152,54 @@ DELETE /feedback/reviews/{id}/ Удалить отзыв
 * docker --version
 * docker compose version
 
+### CI/CD Pipeline (GitHub Actions)
+
+```markdown
+
+Файл `.github/workflows/ci.yml`:
+
+| Job | Описание |
+|-----|----------|
+| **lint** | Проверка кода flake8 |
+| **test** | Запуск тестов Django |
+| **build** | Сборка и публикация Docker образа |
+| **deploy** | Деплой на сервер через SSH |
+
+### Secrets GitHub
+
+- `SECRET_KEY` — ключ Django
+- `DOCKER_HUB_USERNAME` — логин Docker Hub
+- `DOCKER_HUB_ACCESS_TOKEN` — токен Docker Hub
+- `SSH_KEY` — приватный ключ
+- `SSH_USER` — пользователь сервера
+- `SERVER_IP` — IP сервера
+
+### Процесс деплоя
+
+1. Push → запуск workflow
+2. Линтинг → тесты → сборка образа → публикация в Docker Hub → деплой на сервер
+
+### Мониторинг деплоя
+
+# На сервере
+
+cd ~/Bulletin_Board
+docker compose ps
+docker compose logs -f web
+
+* API будет доступно по адресу: http://111.88.146.99:8080/
+* Для авторизации используйте полученный при регистрации email и пароль
+* Для доступа к админке используйте адрес: http://111.88.146.99:8080/admin/
+* API документация: http://111.88.146.99:8080/swagger/
+```
+
 ### Структура проекта
 
 **Bulletin_Board**
 
+├── .github/  
+│ ├── workflows/ # Документация CI/CD
+│ ├── ci.yml
 ├── config/ # Настройки проекта  
 │ ├── settings.py  
 │ └── urls.py  
@@ -180,7 +224,9 @@ DELETE /feedback/reviews/{id}/ Удалить отзыв
 │ ├── views.py  
 │ ├── serializers.py  
 │ ├── urls.py  
-│ └── permissions.py # IsAdminOrAuthor  
+│ └── permissions.py # IsAdminOrAuthor
+├── static/
+├── htmlcov/
 ├── templates/  
 │ └── index.html # Фронтенд интерфейс   
 ├── .env.example  
