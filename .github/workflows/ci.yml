@@ -76,6 +76,15 @@ jobs:
           pip install poetry
           poetry install
 
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
       - name: Run migrations # Применяет миграции Django к тестовой базе данных
         run: poetry run python manage.py migrate
 
