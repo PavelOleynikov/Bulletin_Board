@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulletin Board - Доска объявлений</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Карточки */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        /* Карточка объявления */
+        .ad-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #667eea;
+        }
+
+        .ad-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .ad-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .ad-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e53e3e;
+            margin: 10px 0;
+        }
+
+        .ad-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .ad-description {
+            color: #555;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .ad-image {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            margin: 10px 0;
+            object-fit: cover;
+        }
+
+        .ad-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        /* Кнопки */
+        button, .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+
+        button:hover, .btn:hover {
+            background: #5a67d8;
+        }
+
+        button.danger {
+            background: #e53e3e;
+        }
+
+        button.danger:hover {
+            background: #c53030;
+        }
+
+        button.success {
+            background: #48bb78;
+        }
+
+        button.success:hover {
+            background: #38a169;
+        }
+
+        button.warning {
+            background: #ed8936;
+        }
+
+        button.warning:hover {
+            background: #dd6b20;
+        }
+
+        button.info {
+            background: #4299e1;
+        }
+
+        button.info:hover {
+            background: #3182ce;
+        }
+
+        button.outline {
+            background: transparent;
+            border: 1px solid #667eea;
+            color: #667eea;
+        }
+
+        button.outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Формы */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="file"] {
+            padding: 5px;
+        }
+
+        /* Навигация */
+        .nav {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-info {
+            background: #e8f0fe;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        /* Отзывы */
+        .review-item {
+            background: #f9f9f9;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .review-stars {
+            color: #fbbf24;
+            font-size: 16px;
+        }
+
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 25px;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 12px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            cursor: pointer;
+            font-size: 24px;
+            color: #888;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        /* Сетка */
+        .row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .col {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        /* Уведомления */
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        /* Пагинация */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Список объявлений (сетка) */
+        .ads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+            .ads-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Навигация -->
+    <div class="nav">
+        <h1>📢 Bulletin Board</h1>
+        <div class="nav-buttons">
+            <button onclick="showSection('welcomeSection')" id="homeNavBtn">🏠 Главная</button>
+            <button onclick="showSection('loginSection')" id="loginNavBtn">🔐 Вход</button>
+            <button onclick="showSection('registerSection')" id="registerNavBtn">📝 Регистрация</button>
+            <button onclick="showSection('adsSection')" style="display:none" id="adsNavBtn">📋 Объявления</button>
+            <button onclick="showSection('reviewsSection')" style="display:none" id="reviewsNavBtn">⭐ Отзывы</button>
+            <button onclick="logout()" style="display:none" id="logoutBtn">🚪 Выход</button>
+        </div>
+    </div>
+
+    <!-- Главная страница -->
+    <div id="welcomeSection" class="card">
+        <div style="text-align: center; padding: 40px 20px;">
+            <h2 style="font-size: 32px; margin-bottom: 20px;">🏠 Добро пожаловать на Bulletin Board!</h2>
+            <p style="font-size: 18px; margin-bottom: 20px;">Ваша надежная доска объявлений</p>
+            <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 30px;">
+                <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 10px; min-width: 150px;">
+                    <span style="font-size: 48px;">📋</span>
+                    <h3>Просматривайте</h3>
+                    <p>Все объявления</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 10px; min-width: 150px;">
+                    <span style="font-size: 48px;">✏️</span>
+                    <h3>Создавайте</h3>
+                    <p>Свои объявления</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 10px; min-width: 150px;">
+                    <span style="font-size: 48px;">⭐</span>
+                    <h3>Оставляйте</h3>
+                    <p>Отзывы</p>
+                </div>
+            </div>
+            <div style="margin-top: 30px;">
+                <button onclick="showSection('loginSection')">🔐 Войти</button>
+                <button onclick="showSection('registerSection')">📝 Регистрация</button>
+                <button onclick="showSection('adsSection')">📋 Смотреть объявления</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Вход -->
+    <div id="loginSection" class="card" style="display:none">
+        <h2>🔐 Вход в систему</h2>
+        <div id="loginMessage"></div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="user@admin.com">
+        </div>
+        <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" id="loginPassword" placeholder="testpass789">
+        </div>
+        <button onclick="login()">Войти</button>
+        <button onclick="showSection('registerSection')">Создать аккаунт</button>
+        <button onclick="showSection('resetSection')">Забыли пароль?</button>
+        <button onclick="showSection('welcomeSection')">На главную</button>
+    </div>
+
+    <!-- Регистрация -->
+    <div id="registerSection" class="card" style="display:none">
+        <h2>📝 Регистрация</h2>
+        <div id="registerMessage"></div>
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="regEmail" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Пароль *</label>
+                    <input type="password" id="regPassword" placeholder="минимум 4 символа">
+                </div>
+                <div class="form-group">
+                    <label>Имя</label>
+                    <input type="text" id="regFirstName" placeholder="Иван">
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label>Фамилия</label>
+                    <input type="text" id="regLastName" placeholder="Иванов">
+                </div>
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="text" id="regPhone" placeholder="+7 999 123-45-67">
+                </div>
+                <div class="form-group">
+                    <label>Город</label>
+                    <input type="text" id="regCity" placeholder="Москва">
+                </div>
+            </div>
+        </div>
+        <button onclick="register()">Зарегистрироваться</button>
+        <button onclick="showSection('loginSection')">Уже есть аккаунт? Войти</button>
+        <button onclick="showSection('welcomeSection')">На главную</button>
+    </div>
+
+    <!-- Сброс пароля -->
+    <div id="resetSection" class="card" style="display:none">
+        <h2>🔄 Восстановление пароля</h2>
+        <div id="resetMessage"></div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="resetEmail" placeholder="user@admin.com">
+        </div>
+        <button onclick="resetPassword()">Отправить ссылку</button>
+        <button onclick="showSection('loginSection')">Вспомнил пароль</button>
+        <button onclick="showSection('welcomeSection')">На главную</button>
+    </div>
+
+    <!-- Объявления -->
+    <div id="adsSection" style="display:none">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <h2>➕ Создать объявление</h2>
+                    <div id="createAdMessage"></div>
+                    <div class="form-group">
+                        <label>Заголовок *</label>
+                        <input type="text" id="adTitle" placeholder="Например: Продам iPhone 14">
+                    </div>
+                    <div class="form-group">
+                        <label>Описание *</label>
+                        <textarea id="adDescription" rows="3" placeholder="Подробное описание..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Цена (руб.) *</label>
+                        <input type="number" id="adPrice" placeholder="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Категория *</label>
+                        <select id="adCategory"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Изображение</label>
+                        <input type="file" id="adImage" accept="image/*">
+                    </div>
+                    <button onclick="createAd()">📤 Создать</button>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card">
+                    <h2>📋 Список объявлений</h2>
+                    <div class="form-group">
+                        <input type="text" id="searchInput" placeholder="🔍 Поиск по заголовку..." onkeyup="loadAds()">
+                    </div>
+                    <div id="adsList"></div>
+                    <div id="pagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Все отзывы -->
+    <div id="reviewsSection" style="display:none">
+        <div class="card">
+            <h2>⭐ Все отзывы пользователей</h2>
+            <div class="form-group">
+                <label>Фильтр по объявлению</label>
+                <select id="filterReviewAd" onchange="loadAllReviews()">
+                    <option value="">Все объявления</option>
+                </select>
+            </div>
+            <div id="allReviewsList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно деталей объявления -->
+<div id="adDetailModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="adDetailContent"></div>
+        <div id="reviewFormSection"
+             style="display:none; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+            <h3>✍️ Оставить отзыв</h3>
+            <div id="reviewModalMessage"></div>
+            <div class="form-group">
+                <label>Оценка</label>
+                <select id="modalReviewRating">
+                    <option value="5">⭐⭐⭐⭐⭐ - Отлично</option>
+                    <option value="4">⭐⭐⭐⭐ - Хорошо</option>
+                    <option value="3">⭐⭐⭐ - Нормально</option>
+                    <option value="2">⭐⭐ - Плохо</option>
+                    <option value="1">⭐ - Ужасно</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ваш отзыв</label>
+                <textarea id="modalReviewText" rows="3" placeholder="Поделитесь впечатлениями..."></textarea>
+            </div>
+            <button onclick="submitReviewFromModal()" class="success">📝 Отправить</button>
+        </div>
+        <h3 style="margin-top: 20px;">⭐ Отзывы</h3>
+        <div id="adReviewsList"></div>
+        <button onclick="closeModal()" class="outline">Закрыть</button>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования -->
+<div id="adEditModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>✏️ Редактировать</h2>
+        <div id="adEditForm"></div>
+        <button onclick="saveAdEdit()" class="success">💾 Сохранить</button>
+        <button onclick="closeEditModal()" class="outline">Отмена</button>
+    </div>
+</div>
+
+<script>
+    let accessToken = localStorage.getItem('accessToken');
+    let currentUser = null;
+    let currentPage = 1;
+    let editingAdId = null;
+    let currentDetailAdId = null;
+
+    const API_URL = 'http://localhost:8000';
+
+    function getHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        return headers;
+    }
+
+    async function getCurrentUser() {
+        if (!accessToken) return null;
+        try {
+            const response = await fetch(`${API_URL}/users/me/`, { headers: getHeaders() });
+            if (response.ok) {
+                currentUser = await response.json();
+                console.log('Current user:', currentUser);
+                return currentUser;
+            }
+        } catch (error) {
+            console.error('Error getting user:', error);
+        }
+        return null;
+    }
+
+    async function showSection(sectionId) {
+        const sections = ['welcomeSection', 'loginSection', 'registerSection', 'resetSection', 'adsSection', 'reviewsSection'];
+        sections.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        document.getElementById(sectionId).style.display = 'block';
+
+        if (sectionId === 'adsSection') {
+            await loadCategories();
+            await loadAds();
+            document.getElementById('homeNavBtn').style.display = 'inline-block';
+            document.getElementById('loginNavBtn').style.display = 'none';
+            document.getElementById('registerNavBtn').style.display = 'none';
+            document.getElementById('adsNavBtn').style.display = 'inline-block';
+            document.getElementById('reviewsNavBtn').style.display = 'inline-block';
+            document.getElementById('logoutBtn').style.display = accessToken ? 'inline-block' : 'none';
+        } else if (sectionId === 'reviewsSection') {
+            await loadAdsForFilter();
+            await loadAllReviews();
+            document.getElementById('homeNavBtn').style.display = 'inline-block';
+            document.getElementById('loginNavBtn').style.display = 'none';
+            document.getElementById('registerNavBtn').style.display = 'none';
+            document.getElementById('adsNavBtn').style.display = 'inline-block';
+            document.getElementById('reviewsNavBtn').style.display = 'inline-block';
+            document.getElementById('logoutBtn').style.display = accessToken ? 'inline-block' : 'none';
+        } else {
+            document.getElementById('homeNavBtn').style.display = 'inline-block';
+            document.getElementById('loginNavBtn').style.display = 'inline-block';
+            document.getElementById('registerNavBtn').style.display = 'inline-block';
+            document.getElementById('adsNavBtn').style.display = 'none';
+            document.getElementById('reviewsNavBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+        }
+    }
+
+    async function login() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        try {
+            const response = await fetch(`${API_URL}/users/login/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                accessToken = data.access;
+                localStorage.setItem('accessToken', accessToken);
+                await getCurrentUser();
+                showMessage('loginMessage', '✅ Вход выполнен!', 'success');
+                setTimeout(() => showSection('adsSection'), 1000);
+            } else {
+                showMessage('loginMessage', '❌ ' + (data.detail || 'Ошибка'), 'error');
+            }
+        } catch (error) {
+            showMessage('loginMessage', '❌ Ошибка соединения', 'error');
+        }
+    }
+
+    async function register() {
+        const data = {
+            email: document.getElementById('regEmail').value,
+            password: document.getElementById('regPassword').value,
+            first_name: document.getElementById('regFirstName').value,
+            last_name: document.getElementById('regLastName').value,
+            phone: document.getElementById('regPhone').value,
+            city: document.getElementById('regCity').value,
+            role: 'user'
+        };
+        try {
+            const response = await fetch(`${API_URL}/users/register/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                showMessage('registerMessage', '✅ Регистрация успешна!', 'success');
+                setTimeout(() => showSection('loginSection'), 2000);
+            } else {
+                const error = await response.json();
+                showMessage('registerMessage', '❌ ' + JSON.stringify(error), 'error');
+            }
+        } catch (error) {
+            showMessage('registerMessage', '❌ Ошибка соединения', 'error');
+        }
+    }
+
+    async function resetPassword() {
+        const email = document.getElementById('resetEmail').value;
+        try {
+            const response = await fetch(`${API_URL}/users/reset_password/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            if (response.ok) {
+                showMessage('resetMessage', '✅ Ссылка отправлена (проверьте консоль)', 'success');
+            } else {
+                showMessage('resetMessage', '❌ Пользователь не найден', 'error');
+            }
+        } catch (error) {
+            showMessage('resetMessage', '❌ Ошибка соединения', 'error');
+        }
+    }
+
+    async function loadCategories() {
+        try {
+            const response = await fetch(`${API_URL}/ads/categories/`);
+            if (response.ok) {
+                const categories = await response.json();
+                const select = document.getElementById('adCategory');
+                select.innerHTML = '';
+                categories.forEach(cat => {
+                    select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+
+    async function loadAdsForFilter() {
+        try {
+            const response = await fetch(`${API_URL}/ads/ads/`);
+            if (response.ok) {
+                const data = await response.json();
+                const ads = data.results || data;
+                const filterSelect = document.getElementById('filterReviewAd');
+                filterSelect.innerHTML = '<option value="">Все объявления</option>';
+                ads.forEach(ad => {
+                    filterSelect.innerHTML += `<option value="${ad.id}">${ad.title} (${ad.price} руб.)</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading ads for filter:', error);
+        }
+    }
+
+    async function loadAds() {
+        try {
+            const search = document.getElementById('searchInput').value;
+            let url = `${API_URL}/ads/ads/?page=${currentPage}`;
+            if (search && search.trim() !== '') {
+                url += `&search=${encodeURIComponent(search)}`;
+            }
+            console.log('Загрузка URL:', url);
+
+            const response = await fetch(url);
+            console.log('Статус:', response.status);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Полученные данные:', data);
+                console.log('Количество объявлений:', data.count);
+                console.log('Результаты:', data.results);
+
+                // ВАЖНО: данные находятся в data.results, а не в data
+                displayAds(data.results || []);
+                displayPagination(data);
+            } else {
+                console.error('Ошибка загрузки:', response.status);
+                document.getElementById('adsList').innerHTML = '<p>❌ Ошибка загрузки объявлений</p>';
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            document.getElementById('adsList').innerHTML = '<p>❌ Ошибка соединения</p>';
+        }
+    }
+
+    function displayAds(ads) {
+        const container = document.getElementById('adsList');
+        console.log('displayAds получил:', ads);
+
+        if (!ads || ads.length === 0) {
+            container.innerHTML = '<p>📭 Нет объявлений</p>';
+            return;
+        }
+
+        let html = '<div class="ads-grid">';
+        ads.forEach(ad => {
+            html += `
+                <div class="ad-card">
+                    <div class="ad-title">${ad.title}</div>
+                    <div class="ad-price">${Number(ad.price).toLocaleString()} ₽</div>
+                    <div class="ad-meta">
+                        <span class="ad-badge">📁 ${ad.category_name || ad.category}</span>
+                        <span class="ad-badge">👤 ${ad.author_email || ad.author}</span>
+                        <span class="ad-badge">📅 ${new Date(ad.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="ad-description">${ad.description ? ad.description.substring(0, 100) : ''}${ad.description && ad.description.length > 100 ? '...' : ''}</div>
+                    ${ad.image ? `<img src="${API_URL}${ad.image}" class="ad-image" alt="${ad.title}">` : ''}
+                    <div style="margin-top: 15px;">
+                        <button onclick="viewAdDetail(${ad.id})" class="info">👁️ Детали</button>
+                        ${accessToken ? `
+                            <button onclick="openEditAdModal(${ad.id})" class="warning">✏️</button>
+                            <button onclick="deleteAd(${ad.id})" class="danger">🗑</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function displayPagination(data) {
+        const container = document.getElementById('pagination');
+        console.log('Пагинация данные:', data);
+
+        if (!data || !data.count || data.count <= 4) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.ceil(data.count / 4);
+        let html = '<div class="pagination">';
+        if (data.previous) {
+            html += `<button onclick="changePage(${currentPage - 1})">◀ Назад</button>`;
+        }
+        html += `<span>Стр. ${currentPage} из ${totalPages} (всего ${data.count})</span>`;
+        if (data.next) {
+            html += `<button onclick="changePage(${currentPage + 1})">Вперед ▶</button>`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        loadAds();
+    }
+
+    async function viewAdDetail(id) {
+        currentDetailAdId = id;
+        try {
+            const response = await fetch(`${API_URL}/ads/ads/${id}/`);
+            if (response.ok) {
+                const ad = await response.json();
+                document.getElementById('adDetailContent').innerHTML = `
+                    <div class="ad-detail">
+                        <h2>${ad.title}</h2>
+                        ${ad.image ? `<img src="${API_URL}${ad.image}" alt="${ad.title}" style="max-width:100%; max-height:300px; border-radius:8px;">` : ''}
+                        <p><strong>💰 Цена:</strong> ${ad.price.toLocaleString()} ₽</p>
+                        <p><strong>📁 Категория:</strong> ${ad.category_name || ad.category}</p>
+                        <p><strong>👤 Автор:</strong> ${ad.author_email || ad.author}</p>
+                        <p><strong>📅 Создано:</strong> ${new Date(ad.created_at).toLocaleString()}</p>
+                        <p><strong>📝 Описание:</strong></p>
+                        <p>${ad.description}</p>
+                    </div>
+                `;
+
+                let currentUserId = null;
+                if (accessToken) {
+                    try {
+                        const userResponse = await fetch(`${API_URL}/users/me/`, { headers: getHeaders() });
+                        if (userResponse.ok) {
+                            const userData = await userResponse.json();
+                            currentUserId = userData.id;
+                            currentUser = userData;
+                        }
+                    } catch(e) {
+                        console.error('Ошибка получения пользователя:', e);
+                    }
+                }
+
+                const reviewSection = document.getElementById('reviewFormSection');
+                reviewSection.innerHTML = `
+                    <h3>✍️ Оставить отзыв</h3>
+                    <div id="reviewModalMessage"></div>
+                    <div class="form-group">
+                        <label>Оценка</label>
+                        <select id="modalReviewRating">
+                            <option value="5">⭐⭐⭐⭐⭐ - Отлично</option>
+                            <option value="4">⭐⭐⭐⭐ - Хорошо</option>
+                            <option value="3">⭐⭐⭐ - Нормально</option>
+                            <option value="2">⭐⭐ - Плохо</option>
+                            <option value="1">⭐ - Ужасно</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ваш отзыв</label>
+                        <textarea id="modalReviewText" rows="3" placeholder="Поделитесь впечатлениями..."></textarea>
+                    </div>
+                    <button onclick="submitReviewFromModal()" class="success">📝 Отправить</button>
+                `;
+
+                if (accessToken && currentUserId) {
+                    if (currentUserId !== ad.author) {
+                        reviewSection.style.display = 'block';
+                    } else {
+                        reviewSection.style.display = 'block';
+                        reviewSection.innerHTML = `<div class="alert alert-info">⚠️ Вы не можете оставить отзыв на свое объявление</div>`;
+                    }
+                } else if (accessToken && !currentUserId) {
+                    reviewSection.style.display = 'block';
+                    reviewSection.innerHTML = `<div class="alert alert-info">⚠️ Ошибка загрузки данных пользователя</div>`;
+                } else {
+                    reviewSection.style.display = 'block';
+                    reviewSection.innerHTML = `<div class="alert alert-info">🔐 <a href="#" onclick="showSection('loginSection'); closeModal();">Войдите</a>, чтобы оставить отзыв</div>`;
+                }
+
+                await loadAdReviews(id);
+                document.getElementById('adDetailModal').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки:', error);
+            alert('Ошибка загрузки деталей объявления');
+        }
+    }
+
+    async function loadAdReviews(adId) {
+        try {
+            const response = await fetch(`${API_URL}/feedback/reviews/?ad=${adId}`);
+            if (response.ok) {
+                const reviews = await response.json();
+                let userId = null;
+                let userRole = null;
+                if (accessToken) {
+                    try {
+                        const userResponse = await fetch(`${API_URL}/users/me/`, { headers: getHeaders() });
+                        if (userResponse.ok) {
+                            const userData = await userResponse.json();
+                            userId = userData.id;
+                            userRole = userData.role;
+                        }
+                    } catch(e) {
+                        console.error('Ошибка получения пользователя:', e);
+                    }
+                }
+
+                let html = '';
+                if (reviews.length === 0) {
+                    html = '<p>📭 Нет отзывов. Будьте первым!</p>';
+                } else {
+                    reviews.forEach(review => {
+                        const stars = '⭐'.repeat(review.rating);
+                        const canDelete = accessToken && userId && (review.author === userId || userRole === 'admin');
+                        html += `
+                            <div class="review-item">
+                                <div class="review-stars">${stars} (${review.rating}/5)</div>
+                                <p>${review.text}</p>
+                                <small>👤 ${review.author_email || review.author} | 📅 ${new Date(review.created_at).toLocaleString()}</small>
+                                ${canDelete ? `<br><button onclick="deleteReviewFromModal(${review.id})" class="danger">🗑 Удалить</button>` : ''}
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('adReviewsList').innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки отзывов:', error);
+            document.getElementById('adReviewsList').innerHTML = '<p>❌ Ошибка загрузки отзывов</p>';
+        }
+    }
+
+    async function submitReviewFromModal() {
+        if (!accessToken) { alert('Войдите в систему'); return; }
+        const rating = document.getElementById('modalReviewRating').value;
+        const text = document.getElementById('modalReviewText').value;
+        if (!text.trim()) { showModalMessage('Введите текст', 'error'); return; }
+        try {
+            const response = await fetch(`${API_URL}/feedback/reviews/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ ad: currentDetailAdId, rating: parseInt(rating), text: text.trim() })
+            });
+            if (response.ok) {
+                showModalMessage('✅ Отзыв добавлен!', 'success');
+                document.getElementById('modalReviewText').value = '';
+                await loadAdReviews(currentDetailAdId);
+            } else {
+                const error = await response.json();
+                showModalMessage('❌ ' + JSON.stringify(error), 'error');
+            }
+        } catch (error) {
+            showModalMessage('❌ Ошибка', 'error');
+        }
+    }
+
+    async function deleteReviewFromModal(id) {
+        if (!confirm('Удалить отзыв?')) return;
+        if (!accessToken) {
+            alert('Необходимо войти в систему');
+            return;
+        }
+        try {
+            const response = await fetch(`${API_URL}/feedback/reviews/${id}/`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+            });
+            if (response.ok) {
+                showModalMessage('✅ Отзыв удален', 'success');
+                await loadAdReviews(currentDetailAdId);
+            } else {
+                const error = await response.json();
+                showModalMessage('❌ Ошибка удаления: ' + JSON.stringify(error), 'error');
+            }
+        } catch (error) {
+            showModalMessage('❌ Ошибка соединения', 'error');
+        }
+    }
+
+    function showModalMessage(message, type) {
+        const container = document.getElementById('reviewModalMessage');
+        if (container) {
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('adDetailModal').style.display = 'none';
+    }
+
+    async function openEditAdModal(id) {
+        try {
+            const response = await fetch(`${API_URL}/ads/ads/${id}/`);
+            if (response.ok) {
+                const ad = await response.json();
+                editingAdId = id;
+                const catResponse = await fetch(`${API_URL}/ads/categories/`);
+                let categories = [];
+                if (catResponse.ok) categories = await catResponse.json();
+                document.getElementById('adEditForm').innerHTML = `
+                    <div class="form-group"><label>Заголовок</label><input type="text" id="editTitle" value="${ad.title.replace(/"/g, '&quot;')}"></div>
+                    <div class="form-group"><label>Описание</label><textarea id="editDescription" rows="4">${ad.description.replace(/"/g, '&quot;')}</textarea></div>
+                    <div class="form-group"><label>Цена</label><input type="number" id="editPrice" value="${ad.price}"></div>
+                    <div class="form-group"><label>Категория</label><select id="editCategory">${categories.map(c => `<option value="${c.id}" ${ad.category === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>
+                    <div class="form-group"><label>Активно</label><select id="editIsActive"><option value="true" ${ad.is_active ? 'selected' : ''}>Да</option><option value="false" ${!ad.is_active ? 'selected' : ''}>Нет</option></select></div>
+                `;
+                document.getElementById('adEditModal').style.display = 'block';
+            }
+        } catch (error) {
+            alert('Ошибка загрузки');
+        }
+    }
+
+    async function saveAdEdit() {
+        const data = {
+            title: document.getElementById('editTitle').value,
+            description: document.getElementById('editDescription').value,
+            price: parseFloat(document.getElementById('editPrice').value),
+            category: parseInt(document.getElementById('editCategory').value),
+            is_active: document.getElementById('editIsActive').value === 'true'
+        };
+        try {
+            const response = await fetch(`${API_URL}/ads/ads/${editingAdId}/`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                showMessage('createAdMessage', '✅ Обновлено!', 'success');
+                closeEditModal();
+                loadAds();
+            } else {
+                alert('Ошибка');
+            }
+        } catch (error) {
+            alert('Ошибка');
+        }
+    }
+
+    function closeEditModal() {
+        document.getElementById('adEditModal').style.display = 'none';
+    }
+
+    async function createAd() {
+        if (!accessToken) { showMessage('createAdMessage', '❌ Войдите', 'error'); return; }
+        const formData = new FormData();
+        formData.append('title', document.getElementById('adTitle').value);
+        formData.append('description', document.getElementById('adDescription').value);
+        formData.append('price', document.getElementById('adPrice').value);
+        formData.append('category', document.getElementById('adCategory').value);
+        const imageFile = document.getElementById('adImage').files[0];
+        if (imageFile) formData.append('image', imageFile);
+        if (!formData.get('title') || !formData.get('description') || !formData.get('price')) {
+            showMessage('createAdMessage', '❌ Заполните поля', 'error');
+            return;
+        }
+        try {
+            const response = await fetch(`${API_URL}/ads/ads/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: formData
+            });
+            if (response.ok) {
+                showMessage('createAdMessage', '✅ Создано!', 'success');
+                document.getElementById('adTitle').value = '';
+                document.getElementById('adDescription').value = '';
+                document.getElementById('adPrice').value = '';
+                document.getElementById('adImage').value = '';
+                loadAds();
+            } else {
+                const error = await response.json();
+                showMessage('createAdMessage', '❌ ' + JSON.stringify(error), 'error');
+            }
+        } catch (error) {
+            showMessage('createAdMessage', '❌ Ошибка', 'error');
+        }
+    }
+
+    async function deleteAd(id) {
+        if (!confirm('Удалить объявление?')) return;
+        try {
+            const response = await fetch(`${API_URL}/ads/ads/${id}/`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (response.ok) loadAds();
+            else alert('Ошибка');
+        } catch (error) {
+            alert('Ошибка');
+        }
+    }
+
+    async function loadAllReviews() {
+        const adId = document.getElementById('filterReviewAd').value;
+        let url = `${API_URL}/feedback/reviews/`;
+        if (adId) url += `?ad=${adId}`;
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const reviews = await response.json();
+                let userId = null, userRole = null;
+                if (accessToken) {
+                    try {
+                        const userResponse = await fetch(`${API_URL}/users/me/`, { headers: getHeaders() });
+                        if (userResponse.ok) {
+                            const userData = await userResponse.json();
+                            userId = userData.id;
+                            userRole = userData.role;
+                        }
+                    } catch(e) {}
+                }
+                let html = '';
+                if (reviews.length === 0) html = '<p>Нет отзывов</p>';
+                else {
+                    reviews.forEach(review => {
+                        const stars = '⭐'.repeat(review.rating);
+                        const canDelete = accessToken && (review.author === userId || userRole === 'admin');
+                        html += `
+                            <div class="review-item">
+                                <div class="review-stars">${stars} (${review.rating}/5)</div>
+                                <p><strong>Объявление:</strong> ${review.ad_title || review.ad}</p>
+                                <p>${review.text}</p>
+                                <small>👤 ${review.author_email || review.author} | 📅 ${new Date(review.created_at).toLocaleString()}</small>
+                                ${canDelete ? `<br><button onclick="deleteReview(${review.id})" class="danger">🗑 Удалить</button>` : ''}
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('allReviewsList').innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+        }
+    }
+
+    async function deleteReview(id) {
+        if (!confirm('Удалить отзыв?')) return;
+        try {
+            const response = await fetch(`${API_URL}/feedback/reviews/${id}/`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (response.ok) loadAllReviews();
+            else alert('Ошибка');
+        } catch (error) {
+            alert('Ошибка');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        accessToken = null;
+        currentUser = null;
+        currentPage = 1;
+        showSection('welcomeSection');
+        document.getElementById('loginEmail').value = 'user@admin.com';
+        document.getElementById('loginPassword').value = 'testpass789';
+    }
+
+    function showMessage(elementId, message, type) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => element.innerHTML = '', 3000);
+        }
+    }
+
+    async function init() {
+        if (accessToken) {
+            await getCurrentUser();
+            showSection('adsSection');
+        } else {
+            showSection('welcomeSection');
+            document.getElementById('loginEmail').value = 'user@admin.com';
+            document.getElementById('loginPassword').value = 'testpass789';
+        }
+    }
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+# Пайплайн - включает линтинг, тестирование, сборку Docker-образа и деплой на сервер
+name: Django CI/CD Pipeline
+
+# Триггеры запуска: при push в любой ветку и при создании pull request
+on: [ push, pull_request ]
+
+jobs:
+  lint: # Проверка качества кода
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code # Загружает исходный код репозитория в виртуальную машину GitHub Actions
+        uses: actions/checkout@v4
+
+      - name: Set up Python # Устанавливает указанную версию Python в окружение сборщика
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13.5"
+
+      - name: Install dependencies # Устанавливает Poetry и все зависимости проекта
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Run Flake8 # Запускает линтер Flake8 для проверки стиля кода
+        run: poetry run flake8 .
+
+  test: # Запуск тестов Django
+    needs: lint # Зависимость: запускается только после успешного выполнения lint
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: github_actions
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DEBUG: "0"
+      GITHUB_ACTIONS: "true"
+      DB_NAME: github_actions
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: 5432
+      REDIS_URL: redis://localhost:6379/1
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13.5"
+
+      - name: Cache Poetry dependencies # Кэширует зависимости Poetry для ускорения последующих запусков
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies # Устанавливает зависимости, используя кэш если доступен
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Wait for services
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client redis-tools
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          until redis-cli -h localhost ping; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+
+      - name: Run migrations # Применяет миграции Django к тестовой базе данных
+        run: poetry run python manage.py migrate
+
+      - name: Run tests # Запускает все тесты Django
+        run: poetry run pytest
+
+  build: # Сборка и публикация Docker-образа
+    needs: test # Зависимость: запускается только после успешного прохождения тестов
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub # Аутентификация в Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Build Docker image # Собирает Docker-образ из Dockerfile
+        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }} .
+
+      - name: Push Docker image to Docker Hub # Загружает собранный образ в Docker Hub
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+
+  deploy: # Развертывание на сервере
+    needs: build # Зависимость: запускается только после успешной публикации образа
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH # Настраивает SSH-агент с приватным ключом для доступа к серверу
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy to server # Выполняет команды на удалённом сервере через SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << "EOF"
+            cd ~/Bulletin_Board
+
+            # Обновляем .env файл
+            cat > .env << 'ENV_EOF'
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            DEBUG=0
+            NAME=${DB_NAME:-mydb}
+            DB_USER=${DB_USER:-postgres}
+            PASSWORD=${DB_PASSWORD:-password}
+            HOST=db
+            PORT=5432
+            ENV_EOF
+
+            # Останавливаем старые контейнеры
+            docker compose down
+
+            # Запускаем все сервисы
+            docker compose up -d
+
+            # Очищаем неиспользуемые образы
+            docker image prune -f
+          EOF
